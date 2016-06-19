@@ -21,30 +21,38 @@ type TCPDescriptor struct {
 }
 
 type ProcsnitchRPC struct {
-	procInfo procsnitch.ProcInfo
+	procInfo     procsnitch.ProcInfo
+	connProcInfo *procsnitch.Info
 }
 
-func NewProcsnitchRPC(procInfo procsnitch.ProcInfo) *ProcsnitchRPC {
+func NewProcsnitchRPC(procInfo procsnitch.ProcInfo, connProcInfo *procsnitch.Info) *ProcsnitchRPC {
 	rpc := ProcsnitchRPC{
-		procInfo: procInfo,
+		procInfo:     procInfo,
+		connProcInfo: connProcInfo,
 	}
 	return &rpc
 }
 
 func (t *ProcsnitchRPC) LookupUNIXSocketProcess(socketFile *string, info *procsnitch.Info) error {
 	newInfo := t.procInfo.LookupUNIXSocketProcess(*socketFile)
+	log.Noticef("%s does LookupUNIXSocketProcess retrieves /proc info: %s (ExePath) %d (PID)",
+		t.connProcInfo.ExePath, newInfo.ExePath, newInfo.Pid)
 	*info = *newInfo
 	return nil
 }
 
 func (t *ProcsnitchRPC) LookupTCPSocketProcess(tcpDescriptor *TCPDescriptor, info *procsnitch.Info) error {
 	newInfo := t.procInfo.LookupTCPSocketProcess(tcpDescriptor.SrcPort, tcpDescriptor.DstAddr, tcpDescriptor.DstPort)
+	log.Noticef("%s does LookupTCPSocketProcess retrieves /proc info: %s (ExePath) %d (PID)",
+		t.connProcInfo.ExePath, newInfo.ExePath, newInfo.Pid)
 	*info = *newInfo
 	return nil
 }
 
 func (t *ProcsnitchRPC) LookupUDPSocketProcess(srcPort *uint16, info *procsnitch.Info) error {
 	newInfo := t.procInfo.LookupUDPSocketProcess(*srcPort)
+	log.Noticef("%s does LookupUDPSocketProcess retrieves /proc info: %s (ExePath) %d (PID)",
+		t.connProcInfo.ExePath, newInfo.ExePath, newInfo.Pid)
 	*info = *newInfo
 	return nil
 }
@@ -66,7 +74,17 @@ func NewProcSnitchSession(conn net.Conn, procInfo procsnitch.ProcInfo) *ProcSnit
 		conn:      conn,
 		rpcServer: rpc.NewServer(),
 	}
-	rpc := NewProcsnitchRPC(procInfo)
+
+	// Snitches snitch on snitches.
+	connProcInfo := procsnitch.FindProcessForConnection(conn, procInfo)
+	log.Noticef("%s is connected %s:%s -> %s:%s",
+		connProcInfo.ExePath,
+		conn.RemoteAddr().Network(),
+		conn.RemoteAddr(),
+		conn.LocalAddr().Network(),
+		conn.LocalAddr())
+
+	rpc := NewProcsnitchRPC(procInfo, connProcInfo)
 	p.rpcServer.Register(rpc)
 	return &p
 }

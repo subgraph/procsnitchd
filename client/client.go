@@ -33,6 +33,7 @@ func (s *SnitchClient) Start() error {
 	var err error
 	s.conn, err = net.Dial("unix", s.socketFile)
 	if err != nil {
+		log.Errorf("SnitchClient Start aborted. Failed to connect: %s", err)
 		return err
 	}
 	s.client = rpc.NewClient(s.conn)

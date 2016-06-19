@@ -50,6 +50,8 @@ func main() {
 	logBackend := setupLoggerBackend()
 	log.SetBackend(logBackend)
 	procsnitch.SetLogger(log)
+	protocol.SetLogger(log)
+	service.SetLogger(log)
 
 	if os.Geteuid() != 0 {
 		log.Error("Must be run as root")
@@ -62,7 +64,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Notice("procsnitchd")
+	log.Notice("procsnitchd starting")
 	procInfo := procsnitch.SystemProcInfo{}
 	service := service.NewMortalService("unix", *socketFile, protocol.ConnectionHandlerFactory(procInfo))
 	service.Start()
@@ -72,6 +74,7 @@ func main() {
 	for {
 		select {
 		case <-sigKillChan:
+			log.Notice("procsnitchd stopping")
 			service.Stop()
 			return
 		}

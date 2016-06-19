@@ -6,10 +6,10 @@ import (
 
 	"github.com/op/go-logging"
 	"github.com/subgraph/go-procsnitch"
-	//	"github.com/subgraph/procsnitchd/protocol"
+	"github.com/subgraph/procsnitchd/protocol"
 )
 
-var log = logging.MustGetLogger("procsnitchd_protocol")
+var log = logging.MustGetLogger("procsnitchd_client")
 
 // SetLogger allows setting a custom go-logging instance
 func SetLogger(logger *logging.Logger) {
@@ -51,15 +51,32 @@ func (s *SnitchClient) LookupUNIXSocketProcess(socketFile string) *procsnitch.In
 	info := procsnitch.Info{}
 	err = s.client.Call("ProcsnitchRPC.LookupUNIXSocketProcess", socketFile, &info)
 	if err != nil {
-		panic("wtf")
+		log.Error("LookupUNIXSocketProcess received a nil Info struct")
 	}
 	return &info
 }
 
 func (s *SnitchClient) LookupTCPSocketProcess(srcPort uint16, dstAddr net.IP, dstPort uint16) *procsnitch.Info {
-	return nil
+	var err error
+	info := procsnitch.Info{}
+	tcpDescriptor := protocol.TCPDescriptor{
+		SrcPort: srcPort,
+		DstAddr: dstAddr,
+		DstPort: dstPort,
+	}
+	err = s.client.Call("ProcsnitchRPC.LookupTCPSocketProcess", tcpDescriptor, &info)
+	if err != nil {
+		log.Error("LookupTCPSocketProcess received a nil Info struct")
+	}
+	return &info
 }
 
 func (s *SnitchClient) LookupUDPSocketProcess(srcPort uint16) *procsnitch.Info {
-	return nil
+	var err error
+	info := procsnitch.Info{}
+	err = s.client.Call("ProcsnitchRPC.LookupUDPSocketProcess", srcPort, &info)
+	if err != nil {
+		log.Error("LookupUDPSocketProcess received a nil Info struct")
+	}
+	return &info
 }

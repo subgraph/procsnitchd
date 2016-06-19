@@ -37,7 +37,7 @@ func (r MockProcInfo) LookupUDPSocketProcess(srcPort uint16) *procsnitch.Info {
 	return r.procInfo
 }
 
-func TestSnitchClientGetUnixSocket(t *testing.T) {
+func TestSnitchClientServerRPC(t *testing.T) {
 	var err error = nil
 	ricochetProcInfo := procsnitch.Info{
 		UID:       1,
@@ -71,6 +71,19 @@ func TestSnitchClientGetUnixSocket(t *testing.T) {
 		t.Error("proc info mismatch")
 		t.Fail()
 	}
+	fmt.Println("UNIX socket connection PROC INFO", info)
 
-	fmt.Println("PROC INFO", info)
+	info = client.LookupTCPSocketProcess(0, net.IP{}, 0)
+	if *info != ricochetProcInfo {
+		t.Error("proc info mismatch")
+		t.Fail()
+	}
+	fmt.Println("TCP socket connection PROC INFO", info)
+
+	info = client.LookupUDPSocketProcess(0)
+	if *info != ricochetProcInfo {
+		t.Error("proc info mismatch")
+		t.Fail()
+	}
+	fmt.Println("UDP socket connection PROC INFO", info)
 }

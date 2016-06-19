@@ -15,6 +15,11 @@ func SetLogger(logger *logging.Logger) {
 	log = logger
 }
 
+type TCPDescriptor struct {
+	SrcPort, DstPort uint16
+	DstAddr          net.IP
+}
+
 type ProcsnitchRPC struct {
 	procInfo procsnitch.ProcInfo
 }
@@ -28,6 +33,18 @@ func NewProcsnitchRPC(procInfo procsnitch.ProcInfo) *ProcsnitchRPC {
 
 func (t *ProcsnitchRPC) LookupUNIXSocketProcess(socketFile *string, info *procsnitch.Info) error {
 	newInfo := t.procInfo.LookupUNIXSocketProcess(*socketFile)
+	*info = *newInfo
+	return nil
+}
+
+func (t *ProcsnitchRPC) LookupTCPSocketProcess(tcpDescriptor *TCPDescriptor, info *procsnitch.Info) error {
+	newInfo := t.procInfo.LookupTCPSocketProcess(tcpDescriptor.SrcPort, tcpDescriptor.DstAddr, tcpDescriptor.DstPort)
+	*info = *newInfo
+	return nil
+}
+
+func (t *ProcsnitchRPC) LookupUDPSocketProcess(srcPort *uint16, info *procsnitch.Info) error {
+	newInfo := t.procInfo.LookupUDPSocketProcess(*srcPort)
 	*info = *newInfo
 	return nil
 }

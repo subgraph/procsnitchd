@@ -1,2 +1,2 @@
-procsnitchd - a UNIX domain socket service which provides process information for one side of a network connection.
+procsnitchd - UNIX domain socket service providing process information for local network connections
 

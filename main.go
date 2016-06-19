@@ -63,7 +63,8 @@ func main() {
 	}
 
 	log.Notice("procsnitchd")
-	service := service.NewMortalService("unix", *socketFile, protocol.HandleNewConnection)
+	procInfo := procsnitch.SystemProcInfo{}
+	service := service.NewMortalService("unix", *socketFile, protocol.ConnectionHandlerFactory(procInfo))
 	service.Start()
 
 	sigKillChan := make(chan os.Signal, 1)

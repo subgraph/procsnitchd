@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"unsafe"
@@ -46,6 +47,7 @@ func setupLoggerBackend() logging.LeveledBackend {
 
 func main() {
 	socketFile := flag.String("socket", "", "UNIX domain socket file")
+	group := flag.String("group", "", "Group ownership of the socket file")
 
 	logBackend := setupLoggerBackend()
 	log.SetBackend(logBackend)
@@ -63,12 +65,31 @@ func main() {
 		log.Critical("UNIX domain socket file must be specified!")
 		os.Exit(1)
 	}
+	if *group == "" {
+		log.Critical("group ownership of our UNIX domain socket file must be specified!")
+		os.Exit(1)
+	}
 
-	log.Notice("procsnitchd starting")
 	procInfo := procsnitch.SystemProcInfo{}
 	service := service.NewMortalService("unix", *socketFile, protocol.ConnectionHandlerFactory(procInfo))
 	service.Start()
+	log.Notice("procsnitchd starting")
 
+	// change the group ownership / permissions of the UNIX domain socket
+	cmd := exec.Command("/bin/chgrp", *group, *socketFile)
+	err := cmd.Run()
+	if err != nil {
+		log.Criticalf("failed to chmod socket: %s", err)
+		panic("wtf")
+	}
+	mode := 0775
+	err = os.Chmod(*socketFile, os.FileMode(mode))
+	if err != nil {
+		log.Critical("cannot chmod socket file")
+		panic("wtf")
+	}
+
+	// wait for a control-c or kill signal
 	sigKillChan := make(chan os.Signal, 1)
 	signal.Notify(sigKillChan, os.Interrupt, os.Kill)
 	for {

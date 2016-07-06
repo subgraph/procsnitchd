@@ -24,7 +24,7 @@ ExecStart=/usr/local/sbin/procsnitchd -socket /var/run/procsnitchd/rpc.socket -g
 Create the ``procsnitch`` group and directory.
 
 ```
-groupadd procsnitch
+groupadd --system procsnitch
 mkdir /var/run/procsnitchd
 chgrp procsnitch /var/run/procsnitchd
 ```

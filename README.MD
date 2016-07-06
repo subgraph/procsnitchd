@@ -26,9 +26,10 @@ Create the ``procsnitch`` group and directory.
 ```
 groupadd procsnitch
 mkdir /var/run/procsnitchd
-chown procsnitch:procsnitch /var/run/procsnitchd
+chgrp procsnitch /var/run/procsnitchd
 ```
 
 
-Be in the ``procsnitch`` group so that you can read/write the UNIX domain sock ``/var/run/procsnitchd/rpc.socket``.
+Programs using procsnitch should be in the ``procsnitch`` group so that they
+can read/write the UNIX domain socket ``/var/run/procsnitchd/rpc.socket``.
 

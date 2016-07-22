@@ -17,6 +17,8 @@ After=tor.service
 Type=simple
 User=root
 Group=root
+ExecStartPre=-/bin/mkdir /var/run/procsnitchd
+ExecStartPre=/bin/chgrp procsnitch /var/run/procsnitchd
 ExecStart=/usr/local/sbin/procsnitchd -socket /var/run/procsnitchd/rpc.socket -group procsnitch
 ```
 

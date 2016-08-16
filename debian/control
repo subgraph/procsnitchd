@@ -1,0 +1,20 @@
+Source: procsnitchd
+Section: devel
+Priority: extra
+Maintainer: David Mirza Ahmad <dma@subgraph.com>
+Build-Depends: debhelper (>= 9),
+               dh-golang,
+	       dh-systemd,
+               golang-go
+Standards-Version: 3.9.6
+Homepage: https://github.com/subgraph/procsnitchd
+Vcs-Git: https://github.com/dma/procsnitchd.git
+XS-Go-Import-Path: github.com/subgraph/procsnitchd
+
+Package: procsnitchd
+Architecture: any
+Built-Using: ${misc:Built-Using}
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+Description: UNIX domain socket service providing process information for local network connections.
+

@@ -11,4 +11,4 @@ ExecStartPre=/bin/chgrp procsnitch /var/run/procsnitchd
 ExecStart=/usr/bin/procsnitchd -socket /var/run/procsnitchd/rpc.socket -group procsnitch
 
 [Install]
-WantedBy=roflcoptor.service
+WantedBy=multi-user.target

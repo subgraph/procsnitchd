@@ -2,6 +2,7 @@ package service
 
 import (
 	"net"
+	"os"
 	"sync"
 
 	"github.com/op/go-logging"
@@ -61,6 +62,10 @@ func (l *MortalService) Stop() {
 		l.listener.Close()
 	}
 	l.waitGroup.Wait()
+	if l.network == "unix" {
+		log.Debugf("removing unix socket file %s", l.address)
+		os.Remove(l.address)
+	}
 }
 
 func (l *MortalService) acceptLoop() {

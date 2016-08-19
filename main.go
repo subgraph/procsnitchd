@@ -46,6 +46,7 @@ func setupLoggerBackend() logging.LeveledBackend {
 }
 
 func main() {
+	var err error
 	socketFile := flag.String("socket", "", "UNIX domain socket file")
 	group := flag.String("group", "", "Group ownership of the socket file")
 
@@ -72,12 +73,16 @@ func main() {
 
 	procInfo := procsnitch.SystemProcInfo{}
 	service := service.NewMortalService("unix", *socketFile, protocol.ConnectionHandlerFactory(procInfo))
-	service.Start()
+	err = service.Start()
+	if err != nil {
+		log.Criticalf("failed to start listener %s", err)
+	}
+
 	log.Notice("procsnitchd starting")
 
 	// change the group ownership / permissions of the UNIX domain socket
 	cmd := exec.Command("/bin/chgrp", *group, *socketFile)
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		log.Criticalf("failed to chmod socket: %s", err)
 		panic("wtf")

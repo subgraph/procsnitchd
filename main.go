@@ -4,6 +4,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -33,7 +34,26 @@ func isTerminal(fd int) bool {
 	return err == 0
 }
 
-func setupLoggerBackend() logging.LeveledBackend {
+func stringToLogLevel(level string) (logging.Level, error) {
+
+	switch level {
+	case "DEBUG":
+		return logging.DEBUG, nil
+	case "INFO":
+		return logging.INFO, nil
+	case "NOTICE":
+		return logging.NOTICE, nil
+	case "WARNING":
+		return logging.WARNING, nil
+	case "ERROR":
+		return logging.ERROR, nil
+	case "CRITICAL":
+		return logging.CRITICAL, nil
+	}
+	return -1, fmt.Errorf("invalid logging level %s", level)
+}
+
+func setupLoggerBackend(level logging.Level) logging.LeveledBackend {
 	format := logFormat
 	if isTerminal(int(os.Stderr.Fd())) {
 		format = ttyFormat
@@ -41,16 +61,26 @@ func setupLoggerBackend() logging.LeveledBackend {
 	backend := logging.NewLogBackend(os.Stderr, "", 0)
 	formatter := logging.NewBackendFormatter(backend, format)
 	leveler := logging.AddModuleLevel(formatter)
-	leveler.SetLevel(logging.NOTICE, "procsnitchd")
+	leveler.SetLevel(level, "procsnitchd")
 	return leveler
 }
 
 func main() {
+	var level logging.Level
+	var logLevel string
 	var err error
+
 	socketFile := flag.String("socket", "", "UNIX domain socket file")
 	group := flag.String("group", "", "Group ownership of the socket file")
+	flag.StringVar(&logLevel, "log_level", "INFO", "logging level could be set to: DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL")
+	flag.Parse()
 
-	logBackend := setupLoggerBackend()
+	level, err = stringToLogLevel(logLevel)
+	if err != nil {
+		log.Critical("Invalid logging-level specified.")
+		os.Exit(1)
+	}
+	logBackend := setupLoggerBackend(level)
 	log.SetBackend(logBackend)
 	procsnitch.SetLogger(log)
 	protocol.SetLogger(log)
@@ -61,7 +91,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	flag.Parse()
 	if *socketFile == "" {
 		log.Critical("UNIX domain socket file must be specified!")
 		os.Exit(1)

@@ -45,6 +45,10 @@ func NewMortalService(network, address string, connectionCallback func(net.Conn)
 func (l *MortalService) Start() error {
 	var err error
 	log.Debugf("starting listener service %s:%s", l.network, l.address)
+	if l.network == "unix" {
+		log.Debugf("removing unix socket file %s", l.address)
+		os.Remove(l.address)
+	}
 	l.listener, err = net.Listen(l.network, l.address)
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package client
 import (
 	"net"
 	"net/rpc"
+	"time"
 
 	"github.com/op/go-logging"
 	"github.com/subgraph/go-procsnitch"
@@ -31,7 +32,18 @@ func NewSnitchClient(socketFile string) *SnitchClient {
 
 func (s *SnitchClient) Start() error {
 	var err error
-	s.conn, err = net.Dial("unix", s.socketFile)
+	var status := 1
+	// implement "retry" for net.Dial()
+	// this should prevent issues with procsnitchd service taking time to
+	// start vs client app (like roflcoptor)
+	for i=0; (i<5 && status == 1); i++ {
+		s.conn, err = net.Dial("unix", s.socketFile)
+		// arbitrary "sleep" value
+		time.Sleep(300 * time.Millisecond)
+		if err == nil {
+			status = 0
+		}
+	}
 	if err != nil {
 		log.Errorf("SnitchClient Start aborted. Failed to connect: %s", err)
 		return err

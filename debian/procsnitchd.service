@@ -1,0 +1,14 @@
+[Unit]
+Description=procsnitchd
+After=tor.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStartPre=-/bin/mkdir /var/run/procsnitchd
+ExecStartPre=/bin/chgrp procsnitch /var/run/procsnitchd
+ExecStart=/usr/bin/procsnitchd -socket /var/run/procsnitchd/rpc.socket -group procsnitch
+
+[Install]
+WantedBy=multi-user.target

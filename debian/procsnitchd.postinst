@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+# script version: 1
+
+count=`egrep -c "^procsnitch:" /etc/group || true`
+if [ $count -eq 0 ] ; then
+    echo "No procsnitch group found: adding.."
+    groupadd procsnitch
+fi
+
+#DEBHELPER#

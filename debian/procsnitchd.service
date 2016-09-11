@@ -4,10 +4,7 @@ After=tor.service
 
 [Service]
 Type=simple
-User=root
-Group=root
-ExecStartPre=-/bin/mkdir /var/run/procsnitchd
-ExecStartPre=/bin/chgrp procsnitch /var/run/procsnitchd
+ExecStartPre=/usr/bin/install -g procsnitch -d /var/run/procsnitchd
 ExecStart=/usr/bin/procsnitchd -socket /var/run/procsnitchd/rpc.socket -group procsnitch
 
 [Install]

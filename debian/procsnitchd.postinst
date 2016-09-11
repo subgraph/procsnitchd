@@ -1,11 +1,50 @@
 #!/bin/sh
 set -e
-# script version: 1
+# script version: 2
 
-count=`egrep -c "^procsnitch:" /etc/group || true`
-if [ $count -eq 0 ] ; then
-    echo "No procsnitch group found: adding.."
-    groupadd procsnitch
+case "$1" in
+    configure)
+	# create procsnitch group if not already present
+        if ! getent group procsnitch > /dev/null; then
+            addgroup --quiet --system procsnitch
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 0
+    ;;
+esac
+
+# Automatically added by dh_systemd_enable
+# This will only remove masks created by d-s-h on package removal.
+deb-systemd-helper unmask procsnitchd.service >/dev/null || true
+
+# was-enabled defaults to true, so new installations run enable.
+if deb-systemd-helper --quiet was-enabled procsnitchd.service; then
+	# Enables the unit on first installation, creates new
+	# symlinks on upgrades if the unit file has changed.
+	deb-systemd-helper enable procsnitchd.service >/dev/null || true
+else
+	# Update the statefile to add new symlinks (if any), which need to be
+	# cleaned up on purge. Also remove old symlinks.
+	deb-systemd-helper update-state procsnitchd.service >/dev/null || true
 fi
+# End automatically added section
+# Automatically added by dh_installinit
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ]; then
+	if [ -x "/etc/init.d/procsnitchd" ]; then
+		update-rc.d procsnitchd defaults >/dev/null
+		invoke-rc.d procsnitchd start || exit $?
+	fi
+fi
+# End automatically added section
+# Automatically added by dh_systemd_start
+if [ -d /run/systemd/system ]; then
+	systemctl --system daemon-reload >/dev/null || true
+	deb-systemd-invoke start procsnitchd.service >/dev/null || true
+fi
+# End automatically added section
 
-#DEBHELPER#

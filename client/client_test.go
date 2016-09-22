@@ -58,7 +58,7 @@ func TestSnitchClientServerRPC(t *testing.T) {
 	}
 	defer service.Stop()
 
-	client := NewSnitchClient(socketFile)
+	client := NewSnitchClient(socketFile, nil)
 	err = client.Start()
 	if err != nil {
 		t.Errorf("client failed to connect: %s", err)

@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"fmt"
 	"net"
 	"net/rpc"
 
@@ -59,7 +60,10 @@ func (t *ProcsnitchRPC) LookupUDPSocketProcess(srcPort *uint16, info *procsnitch
 
 func ConnectionHandlerFactory(procInfo procsnitch.ProcInfo) func(conn net.Conn) error {
 	return func(conn net.Conn) error {
-		s := NewProcSnitchSession(conn, procInfo)
+		s, err := NewProcSnitchSession(conn, procInfo)
+		if err != nil {
+			return err
+		}
 		return s.Start()
 	}
 }
@@ -69,7 +73,7 @@ type ProcSnitchSession struct {
 	rpcServer *rpc.Server
 }
 
-func NewProcSnitchSession(conn net.Conn, procInfo procsnitch.ProcInfo) *ProcSnitchSession {
+func NewProcSnitchSession(conn net.Conn, procInfo procsnitch.ProcInfo) (*ProcSnitchSession, error) {
 	p := ProcSnitchSession{
 		conn:      conn,
 		rpcServer: rpc.NewServer(),
@@ -77,6 +81,14 @@ func NewProcSnitchSession(conn net.Conn, procInfo procsnitch.ProcInfo) *ProcSnit
 
 	// Snitches snitch on snitches.
 	connProcInfo := procsnitch.FindProcessForConnection(conn, procInfo)
+	if connProcInfo == nil {
+		return nil, fmt.Errorf("NewProcSnitchSession failed to get procsnitch info for %s:%s -> %s:%s",
+			conn.RemoteAddr().Network(),
+			conn.RemoteAddr(),
+			conn.LocalAddr().Network(),
+			conn.LocalAddr())
+
+	}
 	log.Noticef("%s is connected %s:%s -> %s:%s",
 		connProcInfo.ExePath,
 		conn.RemoteAddr().Network(),
@@ -86,7 +98,7 @@ func NewProcSnitchSession(conn net.Conn, procInfo procsnitch.ProcInfo) *ProcSnit
 
 	rpc := NewProcsnitchRPC(procInfo, connProcInfo)
 	p.rpcServer.Register(rpc)
-	return &p
+	return &p, nil
 }
 
 func (s *ProcSnitchSession) Start() error {

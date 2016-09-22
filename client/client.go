@@ -111,11 +111,11 @@ func (s *SnitchClient) LookupTCPSocketProcess(srcPort uint16, dstAddr net.IP, ds
 	if err != nil {
 		err = s.Dial()
 		if err != nil {
-			log.Errorf("LookupTCPSocketProcess received a nil Info struct: %s", err)
+			log.Errorf("LookupTCPSocketProcess failed, Dial failure: %s", err)
 		} else {
 			err = s.client.Call("ProcsnitchRPC.LookupTCPSocketProcess", tcpDescriptor, &info)
 			if err != nil {
-				log.Errorf("LookupTCPSocketProcess received a nil Info struct: %s", err)
+				log.Errorf("LookupTCPSocketProcess rpc Call failure: %s", err)
 			}
 		}
 	}
